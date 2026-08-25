@@ -1,0 +1,1323 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Cuadro de Medicación</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@700;800&family=Public+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --page-bg:#EFEBE1;
+    --bg:#FAF8F4;
+    --text:#1E1B16;
+    --muted:#8A8577;
+    --muted2:#6B675E;
+    --border:#E4DFD3;
+    --accent:#1E1B16;
+    --danger:#B23A2E;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--page-bg);
+    color:var(--text);
+    font-family:'Public Sans', system-ui, -apple-system, sans-serif;
+    min-height:100vh;
+    display:flex;
+    justify-content:center;
+    padding:0 0 40px 0;
+  }
+  a{color:#2E5FA3;}
+  .wrap{
+    width:100%;
+    max-width:520px;
+    background:var(--bg);
+    min-height:100vh;
+    box-shadow:0 0 40px rgba(0,0,0,0.06);
+  }
+  header{
+    padding:28px 24px 16px 24px;
+    border-bottom:3px solid var(--text);
+  }
+  .header-row{
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:14px;
+  }
+  .title{
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:26px;
+    letter-spacing:-0.01em;
+  }
+  .day-counter{
+    flex:none;
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:13px;
+    color:var(--muted2);
+    background:var(--border);
+    padding:6px 11px;
+    border-radius:20px;
+    white-space:nowrap;
+    margin-top:3px;
+  }
+  .date-nav{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:18px 24px 6px 24px;
+  }
+  .nav-btn{
+    width:40px;height:40px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex:none;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .nav-btn:active{ background:var(--border); }
+  .nav-btn svg{ width:18px; height:18px; }
+  .date-label{
+    flex:1;
+    text-align:center;
+    min-width:0;
+  }
+  .date-label .weekday{
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:19px;
+    text-transform:capitalize;
+    line-height:1.2;
+  }
+  .date-label .daynum{
+    font-size:13px;
+    color:var(--muted2);
+    margin-top:2px;
+  }
+  .today-pill{
+    display:block;
+    margin:2px 24px 0 24px;
+    text-align:center;
+  }
+  .today-pill button{
+    font-family:inherit;
+    font-size:12.5px;
+    font-weight:700;
+    color:#2E5FA3;
+    background:none;
+    border:none;
+    padding:6px 4px;
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+  .today-pill.hidden{ visibility:hidden; }
+
+  .progress-wrap{
+    padding:14px 24px 4px 24px;
+  }
+  .progress-text{
+    font-size:12.5px;
+    font-weight:700;
+    color:var(--muted2);
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    margin-bottom:8px;
+  }
+  .progress-bar{
+    height:8px;
+    border-radius:5px;
+    background:var(--border);
+    overflow:hidden;
+  }
+  .progress-fill{
+    height:100%;
+    background:#2E7D53;
+    border-radius:5px;
+    transition:width .25s ease;
+    width:0%;
+  }
+  .hint{
+    font-size:11.5px;
+    color:var(--muted);
+    margin-top:8px;
+  }
+
+  .dose-list{
+    padding:16px 24px 8px 24px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+  .empty-msg{
+    padding:40px 12px;
+    text-align:center;
+    color:var(--muted);
+    font-size:14px;
+  }
+  .dose-card{
+    border:1.5px solid var(--border);
+    border-radius:14px;
+    padding:14px 14px;
+    background:var(--bg);
+    transition:background .15s ease, border-color .15s ease;
+  }
+  .dose-card.state-taken{
+    background:#F0F5F1;
+    border-color:#CFE0D6;
+  }
+  .dose-card.state-missed{
+    background:#FBECEA;
+    border-color:#F0CAC3;
+  }
+  .dose-row{
+    display:flex;
+    align-items:flex-start;
+    gap:12px;
+  }
+  .dose-dot{
+    width:12px;height:12px;border-radius:50%;
+    flex:none;
+    margin-top:6px;
+  }
+  .dose-info{ flex:1; min-width:0; }
+  .dose-name-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+  }
+  .dose-name{
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:700;
+    font-size:17px;
+  }
+  .dose-card.state-taken .dose-name,
+  .dose-card.state-missed .dose-name{
+    text-decoration:line-through;
+    text-decoration-color:var(--muted);
+    color:var(--muted2);
+  }
+  .q-badge{
+    width:19px;height:19px;min-width:19px;
+    border-radius:50%;
+    border:2px solid var(--danger);
+    display:flex;align-items:center;justify-content:center;
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:11px;
+    color:var(--danger);
+  }
+  .dose-sub{
+    font-size:12.5px;
+    color:var(--muted);
+    margin-top:1px;
+  }
+  .dose-amount{
+    font-size:14.5px;
+    font-weight:700;
+    margin-top:7px;
+    color:var(--text);
+  }
+  .dose-card.state-taken .dose-amount,
+  .dose-card.state-missed .dose-amount{
+    color:var(--muted2);
+  }
+  .dose-right{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    flex:none;
+  }
+  .time-badge{
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:15px;
+    padding:5px 11px;
+    border-radius:9px;
+    white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+    transition:opacity .15s ease;
+  }
+  .dose-card.state-taken .time-badge,
+  .dose-card.state-missed .time-badge{
+    opacity:.5;
+  }
+  .checkbox{
+    width:30px;height:30px;
+    border-radius:8px;
+    border:2.5px solid var(--text);
+    background:var(--bg);
+    flex:none;
+    cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    -webkit-tap-highlight-color:transparent;
+    -webkit-user-select:none;
+    user-select:none;
+    touch-action:manipulation;
+    position:relative;
+  }
+  .checkbox.state-taken{
+    background:#2E7D53;
+    border-color:#2E7D53;
+  }
+  .checkbox.state-missed{
+    background:#B23A2E;
+    border-color:#B23A2E;
+  }
+  .checkbox svg{ width:16px;height:16px; position:absolute; opacity:0; }
+  .checkbox.state-taken .icon-check{ opacity:1; }
+  .checkbox.state-missed .icon-x{ opacity:1; }
+
+  .card-bottom-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    margin-top:10px;
+  }
+  .comment-toggle{
+    font-size:12px;
+    font-weight:700;
+    color:#2E5FA3;
+    background:none;
+    border:none;
+    padding:2px 0;
+    cursor:pointer;
+    display:flex;
+    align-items:center;
+    gap:5px;
+  }
+  .comment-dot{
+    width:6px;height:6px;border-radius:50%;
+    background:#2E5FA3;
+    display:none;
+  }
+  .comment-dot.show{ display:inline-block; }
+  .comment-box{
+    display:none;
+    margin-top:8px;
+  }
+  .comment-box.open{ display:block; }
+  .comment-box-footer{
+    display:flex;
+    justify-content:flex-end;
+    margin-top:6px;
+  }
+  .comment-close{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted2);
+    background:none;
+    border:none;
+    cursor:pointer;
+    padding:3px 4px;
+  }
+  .comment-box textarea{
+    width:100%;
+    min-height:56px;
+    resize:vertical;
+    font-family:inherit;
+    font-size:13.5px;
+    padding:10px;
+    border-radius:8px;
+    border:1.5px solid var(--border);
+    background:#fff;
+    color:var(--text);
+  }
+  .card-icons{
+    display:flex;
+    gap:6px;
+    flex:none;
+  }
+  .icon-btn{
+    width:28px;height:28px;
+    border-radius:8px;
+    border:1.5px solid var(--border);
+    background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .icon-btn:active{ background:var(--border); }
+  .icon-btn svg{ width:14px;height:14px; }
+
+  .strip-section{
+    margin-top:14px;
+    padding-top:16px;
+    border-top:1px solid var(--border);
+  }
+  .strip-label{
+    padding:0 24px;
+    font-size:11.5px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:0.07em;
+    color:var(--muted);
+    margin-bottom:10px;
+  }
+  .strip{
+    display:flex;
+    gap:8px;
+    overflow-x:auto;
+    padding:2px 24px 6px 24px;
+    scroll-behavior:smooth;
+  }
+  .strip::-webkit-scrollbar{ height:0; }
+  .day-pill{
+    flex:none;
+    width:46px;
+    padding:9px 0;
+    border-radius:12px;
+    border:1.5px solid var(--border);
+    background:var(--bg);
+    text-align:center;
+    cursor:pointer;
+    box-shadow:0 1px 2px rgba(30,27,22,0.05);
+    transition:transform .1s ease, box-shadow .1s ease;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .day-pill:active{
+    transform:scale(0.94);
+    box-shadow:none;
+  }
+  .day-pill .dow{
+    font-size:9.5px;
+    font-weight:700;
+    color:var(--muted);
+    text-transform:uppercase;
+  }
+  .day-pill .num{
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:15px;
+    margin-top:2px;
+  }
+  .day-pill.is-today{
+    border-color:var(--text);
+  }
+  .day-pill.is-selected{
+    background:var(--text);
+  }
+  .day-pill.is-selected .dow,
+  .day-pill.is-selected .num{
+    color:#fff;
+  }
+  .day-pill.is-done{
+    background:#E7F1EA;
+    border-color:#2E7D53;
+  }
+  .day-pill.is-done.is-selected{
+    background:#2E7D53;
+    border-color:#2E7D53;
+  }
+
+  .footer-wrap{
+    padding:22px 24px 4px 24px;
+  }
+  .disclaimer{
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    max-width:300px;
+    margin:0 auto;
+    padding:16px 18px;
+    border-radius:14px;
+    background:#F2EEE3;
+    border:1px solid var(--border);
+  }
+  .disclaimer-icon{
+    width:26px;height:26px;
+    border-radius:50%;
+    background:var(--border);
+    display:flex;align-items:center;justify-content:center;
+    flex:none;
+  }
+  .disclaimer-icon svg{ width:14px;height:14px; }
+  .disclaimer-text{
+    font-size:12px;
+    line-height:1.5;
+    color:var(--muted2);
+    text-align:center;
+  }
+  .disclaimer-text .storage-note{
+    display:block;
+    margin-top:5px;
+    color:var(--muted);
+    font-size:11px;
+  }
+
+  .bottom-actions{
+    padding:16px 24px 28px 24px;
+  }
+  .add-med-btn{
+    width:100%;
+    padding:14px;
+    border-radius:12px;
+    border:2px dashed var(--border);
+    background:var(--bg);
+    color:var(--text);
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:15px;
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .add-med-btn:active{ background:var(--border); }
+
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(30,27,22,0.45);
+    display:none;
+    align-items:flex-end;
+    justify-content:center;
+    z-index:50;
+    padding:0;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{
+    width:100%;
+    max-width:520px;
+    max-height:88vh;
+    overflow-y:auto;
+    background:var(--bg);
+    border-radius:20px 20px 0 0;
+    padding:22px 22px 28px 22px;
+  }
+  .modal-header{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:18px;
+  }
+  .modal-title{
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:19px;
+  }
+  .modal-close{
+    width:34px;height:34px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:var(--bg);
+    display:flex;align-items:center;justify-content:center;
+    cursor:pointer;
+    flex:none;
+  }
+  .modal-close svg{ width:15px;height:15px; }
+  .field{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+    margin-bottom:14px;
+  }
+  .field label{
+    font-size:11.5px;
+    font-weight:700;
+    color:var(--muted2);
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+  }
+  .field input[type="text"],
+  .field input[type="date"],
+  .field input[type="time"]{
+    font-family:inherit;
+    font-size:15px;
+    padding:10px 12px;
+    border-radius:10px;
+    border:1.5px solid var(--border);
+    background:#fff;
+    color:var(--text);
+    width:100%;
+  }
+  .field-row{
+    display:flex;
+    gap:10px;
+  }
+  .field-row .field{ flex:1; margin-bottom:14px; }
+  .checkbox-field{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:14px;
+  }
+  .checkbox-field input{ width:18px;height:18px; }
+  .checkbox-field label{
+    font-size:13.5px;
+    font-weight:600;
+  }
+  .color-swatches{
+    display:flex;
+    gap:9px;
+    flex-wrap:wrap;
+    margin-bottom:16px;
+  }
+  .swatch{
+    width:30px;height:30px;
+    border-radius:50%;
+    border:none;
+    cursor:pointer;
+    padding:0;
+  }
+  .swatch.selected{
+    box-shadow:0 0 0 3px var(--bg), 0 0 0 5px var(--text);
+  }
+  .modal-actions{
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-top:6px;
+    gap:10px;
+  }
+  .modal-actions-right{
+    display:flex;
+    gap:8px;
+  }
+  .btn-primary{
+    background:var(--text);
+    color:#fff;
+    border:none;
+    padding:11px 20px;
+    border-radius:10px;
+    font-family:'Archivo', system-ui, sans-serif;
+    font-weight:800;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn-secondary{
+    background:var(--bg);
+    color:var(--text);
+    border:1.5px solid var(--border);
+    padding:11px 16px;
+    border-radius:10px;
+    font-weight:700;
+    font-size:14px;
+    cursor:pointer;
+  }
+  .btn-delete{
+    background:none;
+    color:var(--danger);
+    border:none;
+    padding:8px 2px;
+    font-weight:700;
+    font-size:13.5px;
+    cursor:pointer;
+    text-decoration:underline;
+    text-underline-offset:2px;
+  }
+  .btn-delete.hidden{ visibility:hidden; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="header-row">
+      <div class="title">Cuadro de Medicación</div>
+      <div class="day-counter" id="dayCounter">Día 1/1</div>
+    </div>
+  </header>
+
+  <div class="date-nav">
+    <button class="nav-btn" id="prevBtn" aria-label="Día anterior">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M15 5l-7 7 7 7" stroke="#1E1B16" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+    <div class="date-label">
+      <div class="weekday" id="weekdayLabel">—</div>
+      <div class="daynum" id="daynumLabel">—</div>
+    </div>
+    <button class="nav-btn" id="nextBtn" aria-label="Día siguiente">
+      <svg viewBox="0 0 24 24" fill="none"><path d="M9 5l7 7-7 7" stroke="#1E1B16" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </div>
+  <div class="today-pill" id="todayPillWrap">
+    <button id="todayBtn">Ir a hoy</button>
+  </div>
+
+  <div class="progress-wrap">
+    <div class="progress-text" id="progressText">0 / 0 dosis dadas</div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+    <div class="hint">Tocá una dosis para marcarla dada. Mantené presionado o tocá dos veces para marcarla en rojo (no se dio).</div>
+  </div>
+
+  <div class="dose-list" id="doseList"></div>
+
+  <div class="strip-section">
+    <div class="strip-label">Ir a otro día</div>
+    <div class="strip" id="strip"></div>
+  </div>
+
+  <div class="footer-wrap">
+    <footer class="disclaimer">
+      <div class="disclaimer-icon">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M12 8v5m0 3h.01M12 21a9 9 0 1 0 0-18 9 9 0 0 0 0 18Z" stroke="#6B675E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </div>
+      <div class="disclaimer-text">
+        Verificar siempre con la indicación médica/veterinaria antes de administrar cualquier dosis.
+        <span class="storage-note">Los datos se guardan solo en este navegador.</span>
+      </div>
+    </footer>
+  </div>
+
+  <div class="bottom-actions">
+    <button class="add-med-btn" id="addMedBtn" type="button">+ Agregar medicamento</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-card">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Nuevo medicamento</div>
+      <button class="modal-close" id="modalClose" type="button" aria-label="Cerrar">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="#1E1B16" stroke-width="2.2" stroke-linecap="round"/></svg>
+      </button>
+    </div>
+    <form id="medForm">
+      <div class="field">
+        <label for="f-name">Nombre</label>
+        <input type="text" id="f-name" placeholder="ej: Amoxicilina" required>
+      </div>
+      <div class="field">
+        <label for="f-subtitle">Nota (opcional)</label>
+        <input type="text" id="f-subtitle" placeholder="ej: cada 12 horas">
+      </div>
+      <div class="field">
+        <label for="f-dose">Dosis</label>
+        <input type="text" id="f-dose" placeholder="ej: 2 mg" required>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label for="f-time1">Horario</label>
+          <input type="time" id="f-time1" required>
+        </div>
+        <div class="field">
+          <label for="f-time2">Horario 2 (opcional)</label>
+          <input type="time" id="f-time2">
+        </div>
+      </div>
+      <div class="field">
+        <label for="f-start">Fecha de inicio</label>
+        <input type="date" id="f-start" required>
+      </div>
+      <div class="checkbox-field">
+        <input type="checkbox" id="f-oneday">
+        <label for="f-oneday">Dosis única (un solo día)</label>
+      </div>
+      <div class="field" id="endField">
+        <label for="f-end">Fecha de fin</label>
+        <input type="date" id="f-end" required>
+      </div>
+      <div class="checkbox-field">
+        <input type="checkbox" id="f-question">
+        <label for="f-question">Destacar con signo de pregunta (control / duda)</label>
+      </div>
+      <div class="field">
+        <label>Color</label>
+        <div class="color-swatches" id="colorSwatches"></div>
+      </div>
+      <div class="modal-actions">
+        <button type="button" id="deleteMedBtn" class="btn-delete hidden">Eliminar medicamento</button>
+        <div class="modal-actions-right">
+          <button type="button" id="cancelMedBtn" class="btn-secondary">Cancelar</button>
+          <button type="submit" class="btn-primary">Guardar</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  var STORAGE_PREFIX = "medcal:v2:";
+  var MEDS_KEY = STORAGE_PREFIX + "defs";
+
+  var DEFAULT_MEDS = [
+    { id:"cisticalm-1", name:"Cisticalm", subtitle:"dosis inicial", dose:"2 cápsulas", times:["19:00"], start:"2026-08-25", end:"2026-08-27", color:"#C98A2D", question:false },
+    { id:"cisticalm-2", name:"Cisticalm", subtitle:"dosis reducida", dose:"1 cápsula", times:["19:00"], start:"2026-08-28", end:"2026-09-27", color:"#C98A2D", question:false },
+    { id:"meloxicam-app", name:"Meloxicam", subtitle:"aplicado por el doctor", dose:"1,5 mg iny.", times:["19:00"], start:"2026-08-26", end:"2026-08-26", color:"#C1502E", question:false },
+    { id:"meloxicam-control", name:"Meloxicam", subtitle:"control 48 h — ¿otra dosis?", dose:"—", times:["19:00"], start:"2026-08-28", end:"2026-08-28", color:"#B23A2E", question:true },
+    { id:"dipiroma", name:"Dipiroma", subtitle:"cada 12 horas", dose:"2 mg", times:["08:00","19:00"], start:"2026-08-25", end:"2026-09-25", color:"#2E5FA3", question:false },
+    { id:"prednisol", name:"Prednisol", subtitle:"cada 12 horas", dose:"10 gotas", times:["08:00","19:00"], start:"2026-08-25", end:"2026-09-25", color:"#2E7D53", question:false },
+    { id:"terazosina", name:"Terazosina", subtitle:"cada 12 horas", dose:"1/4 pastilla", times:["08:00","19:00"], start:"2026-08-25", end:"2026-09-25", color:"#227A82", question:false }
+  ];
+
+  var PRESET_COLORS = ["#C98A2D","#C1502E","#B23A2E","#2E5FA3","#2E7D53","#227A82","#7A4FA3","#555555"];
+  var COLOR_TINTS = {
+    "#C98A2D": "#F6EAD4",
+    "#C1502E": "#F7E1DA",
+    "#B23A2E": "#F7DAD6",
+    "#2E5FA3": "#DCE6F2",
+    "#2E7D53": "#DDEEE4",
+    "#227A82": "#D9EDEF",
+    "#7A4FA3": "#EBE1F3",
+    "#555555": "#E6E6E6"
+  };
+
+  var MEDS = [];
+
+  function loadMeds(){
+    try{
+      var raw = localStorage.getItem(MEDS_KEY);
+      if (raw){
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length) return parsed;
+      }
+    }catch(e){}
+    var defaults = DEFAULT_MEDS.map(function(m){ return Object.assign({}, m); });
+    persistMeds(defaults);
+    return defaults;
+  }
+  function persistMeds(list){
+    try{ localStorage.setItem(MEDS_KEY, JSON.stringify(list)); }catch(e){}
+  }
+  function saveMeds(list){
+    MEDS = list;
+    persistMeds(list);
+  }
+  function findMed(id){
+    for (var i=0;i<MEDS.length;i++){ if (MEDS[i].id === id) return MEDS[i]; }
+    return null;
+  }
+
+  function pad(n){ return String(n).padStart(2,"0"); }
+  function keyOf(d){ return d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate()); }
+  function addDays(d,n){ var r = new Date(d); r.setDate(r.getDate()+n); return r; }
+  function parseKey(k){
+    var parts = k.split("-");
+    return new Date(Number(parts[0]), Number(parts[1])-1, Number(parts[2]));
+  }
+  function clampDate(d){
+    if (d < START) return new Date(START);
+    if (d > END) return new Date(END);
+    return d;
+  }
+
+  function dosesForKey(k){
+    var doses = [];
+    MEDS.forEach(function(med){
+      if (k >= med.start && k <= med.end){
+        med.times.forEach(function(t){
+          doses.push({
+            typeId: med.id + "__" + t,
+            medId: med.id,
+            name: med.name,
+            subtitle: med.subtitle,
+            dose: med.dose,
+            time: t,
+            color: med.color,
+            question: !!med.question
+          });
+        });
+      }
+    });
+    doses.sort(function(a,b){ return a.time.localeCompare(b.time); });
+    return doses;
+  }
+
+  var START, END, ALL_DAYS, DAY_BY_KEY;
+
+  function computeRange(){
+    if (!MEDS.length){
+      var t = new Date();
+      START = new Date(t.getFullYear(), t.getMonth(), t.getDate());
+      END = addDays(START, 6);
+      return;
+    }
+    var minK = null, maxK = null;
+    MEDS.forEach(function(m){
+      if (minK === null || m.start < minK) minK = m.start;
+      if (maxK === null || m.end > maxK) maxK = m.end;
+    });
+    START = parseKey(minK);
+    END = parseKey(maxK);
+  }
+
+  function rebuildDays(){
+    computeRange();
+    ALL_DAYS = [];
+    var d = new Date(START);
+    while (d <= END){
+      var k = keyOf(d);
+      ALL_DAYS.push({ key:k, date:new Date(d), doses:dosesForKey(k) });
+      d = addDays(d,1);
+    }
+    DAY_BY_KEY = {};
+    ALL_DAYS.forEach(function(day){ DAY_BY_KEY[day.key] = day; });
+  }
+
+  function getState(storageKey){
+    try{
+      var raw = localStorage.getItem(STORAGE_PREFIX + storageKey);
+      if (!raw) return { status:"none", comment:"" };
+      var parsed = JSON.parse(raw);
+      var status = parsed.status;
+      if (status !== "taken" && status !== "missed" && status !== "none"){
+        status = parsed.checked ? "taken" : "none";
+      }
+      return { status:status, comment: parsed.comment || "" };
+    }catch(e){ return { status:"none", comment:"" }; }
+  }
+  function setState(storageKey, partial){
+    var cur = getState(storageKey);
+    var next = { status: partial.status !== undefined ? partial.status : cur.status,
+                 comment: partial.comment !== undefined ? partial.comment : cur.comment };
+    try{ localStorage.setItem(STORAGE_PREFIX + storageKey, JSON.stringify(next)); }catch(e){}
+    return next;
+  }
+
+  function dayCompletion(day){
+    if (!day.doses.length) return null;
+    var doneCount = 0;
+    day.doses.forEach(function(dose){
+      var sk = day.key + "__" + dose.typeId;
+      if (getState(sk).status === "taken") doneCount++;
+    });
+    return { done:doneCount, total:day.doses.length };
+  }
+
+  var todayKey = keyOf(new Date());
+  var selected = new Date();
+
+  var weekdayLabel = document.getElementById("weekdayLabel");
+  var daynumLabel = document.getElementById("daynumLabel");
+  var doseList = document.getElementById("doseList");
+  var progressText = document.getElementById("progressText");
+  var progressFill = document.getElementById("progressFill");
+  var strip = document.getElementById("strip");
+  var todayPillWrap = document.getElementById("todayPillWrap");
+  var dayCounter = document.getElementById("dayCounter");
+
+  function fmtWeekday(d){
+    var s = d.toLocaleDateString("es-AR", { weekday:"long" });
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  }
+  function fmtDayNum(d){
+    return d.toLocaleDateString("es-AR", { day:"numeric", month:"long" });
+  }
+
+  function renderDoseCard(day, dose){
+    var storageKey = day.key + "__" + dose.typeId;
+    var state = getState(storageKey);
+
+    var card = document.createElement("div");
+    card.className = "dose-card" + (state.status !== "none" ? " state-" + state.status : "");
+
+    var row = document.createElement("div");
+    row.className = "dose-row";
+
+    var dot = document.createElement("div");
+    dot.className = "dose-dot";
+    dot.style.background = dose.color;
+    row.appendChild(dot);
+
+    var info = document.createElement("div");
+    info.className = "dose-info";
+
+    var nameRow = document.createElement("div");
+    nameRow.className = "dose-name-row";
+    var name = document.createElement("div");
+    name.className = "dose-name";
+    name.textContent = dose.name;
+    nameRow.appendChild(name);
+    if (dose.question){
+      var badge = document.createElement("div");
+      badge.className = "q-badge";
+      badge.textContent = "?";
+      nameRow.appendChild(badge);
+    }
+    info.appendChild(nameRow);
+
+    if (dose.subtitle){
+      var sub = document.createElement("div");
+      sub.className = "dose-sub";
+      sub.textContent = dose.subtitle;
+      info.appendChild(sub);
+    }
+
+    var amount = document.createElement("div");
+    amount.className = "dose-amount";
+    amount.textContent = dose.dose;
+    info.appendChild(amount);
+
+    row.appendChild(info);
+
+    var right = document.createElement("div");
+    right.className = "dose-right";
+
+    var timeBadge = document.createElement("div");
+    timeBadge.className = "time-badge";
+    timeBadge.textContent = dose.time;
+    timeBadge.style.background = COLOR_TINTS[dose.color] || "#EDEAE2";
+    timeBadge.style.color = dose.color;
+    right.appendChild(timeBadge);
+
+    var checkbox = document.createElement("div");
+    checkbox.className = "checkbox" + (state.status !== "none" ? " state-" + state.status : "");
+    checkbox.setAttribute("role","checkbox");
+    checkbox.setAttribute("aria-checked", state.status === "taken" ? "true":"false");
+    checkbox.innerHTML =
+      '<svg class="icon-check" viewBox="0 0 24 24" fill="none"><path d="M5 13l4 4L19 7" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>' +
+      '<svg class="icon-x" viewBox="0 0 24 24" fill="none"><path d="M7 7l10 10M17 7L7 17" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+
+    function applyState(newState){
+      card.className = "dose-card" + (newState.status !== "none" ? " state-" + newState.status : "");
+      checkbox.className = "checkbox" + (newState.status !== "none" ? " state-" + newState.status : "");
+      checkbox.setAttribute("aria-checked", newState.status === "taken" ? "true":"false");
+      updateProgress(day);
+      updateStripPill(day.key);
+    }
+
+    var pressTimer = null;
+    var suppressClick = false;
+
+    function toggleTaken(){
+      var cur = getState(storageKey);
+      var next = setState(storageKey, { status: cur.status === "none" ? "taken" : "none" });
+      applyState(next);
+    }
+    function toggleMissed(){
+      var cur = getState(storageKey);
+      var next = setState(storageKey, { status: cur.status === "missed" ? "none" : "missed" });
+      applyState(next);
+    }
+
+    checkbox.addEventListener("pointerdown", function(){
+      suppressClick = false;
+      clearTimeout(pressTimer);
+      pressTimer = setTimeout(function(){
+        suppressClick = true;
+        toggleMissed();
+      }, 550);
+    });
+    ["pointerup","pointerleave","pointercancel"].forEach(function(evt){
+      checkbox.addEventListener(evt, function(){ clearTimeout(pressTimer); });
+    });
+    checkbox.addEventListener("click", function(e){
+      if (suppressClick){ suppressClick = false; e.preventDefault(); return; }
+      toggleTaken();
+    });
+    checkbox.addEventListener("dblclick", function(e){
+      e.preventDefault();
+      toggleMissed();
+    });
+
+    right.appendChild(checkbox);
+    row.appendChild(right);
+
+    card.appendChild(row);
+
+    var commentDot = document.createElement("span");
+    commentDot.className = "comment-dot" + (state.comment ? " show" : "");
+
+    var toggle = document.createElement("button");
+    toggle.className = "comment-toggle";
+    toggle.type = "button";
+    toggle.appendChild(document.createTextNode("Comentario"));
+    toggle.appendChild(commentDot);
+
+    var box = document.createElement("div");
+    box.className = "comment-box";
+    var textarea = document.createElement("textarea");
+    textarea.placeholder = "Agregar una nota...";
+    textarea.value = state.comment;
+    textarea.addEventListener("input", function(){
+      var ns = setState(storageKey, { comment: textarea.value });
+      commentDot.className = "comment-dot" + (ns.comment ? " show" : "");
+    });
+    box.appendChild(textarea);
+
+    var closeRow = document.createElement("div");
+    closeRow.className = "comment-box-footer";
+    var closeBtn = document.createElement("button");
+    closeBtn.type = "button";
+    closeBtn.className = "comment-close";
+    closeBtn.textContent = "Cerrar";
+    closeBtn.addEventListener("click", function(){
+      box.classList.remove("open");
+    });
+    closeRow.appendChild(closeBtn);
+    box.appendChild(closeRow);
+
+    toggle.addEventListener("click", function(){
+      var isOpen = box.classList.toggle("open");
+      if (isOpen) textarea.focus();
+    });
+    if (state.comment) box.classList.add("open");
+
+    var bottomRow = document.createElement("div");
+    bottomRow.className = "card-bottom-row";
+    bottomRow.appendChild(toggle);
+
+    var icons = document.createElement("div");
+    icons.className = "card-icons";
+
+    var editBtn = document.createElement("button");
+    editBtn.type = "button";
+    editBtn.className = "icon-btn";
+    editBtn.title = "Editar medicamento";
+    editBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M4 20l4.3-.9L18.4 9a1.5 1.5 0 0 0 0-2.1l-1.3-1.3a1.5 1.5 0 0 0-2.1 0L4.9 15.7 4 20Z" stroke="#1E1B16" stroke-width="1.8" stroke-linejoin="round"/></svg>';
+    editBtn.addEventListener("click", function(){
+      var med = findMed(dose.medId);
+      if (med) openMedForm(med);
+    });
+
+    var deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "icon-btn";
+    deleteBtn.title = "Eliminar medicamento";
+    deleteBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none"><path d="M5 7h14M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2m-8 0 1 13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1l1-13" stroke="#B23A2E" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+    deleteBtn.addEventListener("click", function(){
+      removeMedication(dose.medId, dose.name);
+    });
+
+    icons.appendChild(editBtn);
+    icons.appendChild(deleteBtn);
+    bottomRow.appendChild(icons);
+
+    card.appendChild(bottomRow);
+    card.appendChild(box);
+
+    return card;
+  }
+
+  function updateProgress(day){
+    var comp = dayCompletion(day);
+    if (!comp){
+      progressText.textContent = "Sin dosis programadas";
+      progressFill.style.width = "0%";
+      return;
+    }
+    progressText.textContent = comp.done + " / " + comp.total + " dosis dadas";
+    progressFill.style.width = Math.round((comp.done/comp.total)*100) + "%";
+  }
+
+  function renderDay(){
+    var key = keyOf(selected);
+    var day = DAY_BY_KEY[key];
+    if (!day) return;
+
+    weekdayLabel.textContent = fmtWeekday(day.date);
+    daynumLabel.textContent = fmtDayNum(day.date);
+    dayCounter.textContent = "Día " + (ALL_DAYS.indexOf(day)+1) + "/" + ALL_DAYS.length;
+
+    doseList.innerHTML = "";
+    if (!day.doses.length){
+      var empty = document.createElement("div");
+      empty.className = "empty-msg";
+      empty.textContent = "No hay dosis programadas para este día.";
+      doseList.appendChild(empty);
+    } else {
+      day.doses.forEach(function(dose){
+        doseList.appendChild(renderDoseCard(day, dose));
+      });
+    }
+
+    updateProgress(day);
+
+    todayPillWrap.className = "today-pill" + (key === todayKey ? " hidden" : "");
+
+    renderStripSelection();
+  }
+
+  function goTo(newDate){
+    selected = clampDate(newDate);
+    renderDay();
+  }
+
+  document.getElementById("prevBtn").addEventListener("click", function(){
+    goTo(addDays(selected,-1));
+  });
+  document.getElementById("nextBtn").addEventListener("click", function(){
+    goTo(addDays(selected,1));
+  });
+  document.getElementById("todayBtn").addEventListener("click", function(){
+    goTo(new Date());
+  });
+
+  // Strip of day pills
+  var pillEls = {};
+  function buildStrip(){
+    strip.innerHTML = "";
+    pillEls = {};
+    ALL_DAYS.forEach(function(day){
+      var pill = document.createElement("div");
+      pill.className = "day-pill";
+      var dow = document.createElement("div");
+      dow.className = "dow";
+      dow.textContent = day.date.toLocaleDateString("es-AR", { weekday:"short" }).replace(".","");
+      var num = document.createElement("div");
+      num.className = "num";
+      num.textContent = day.date.getDate();
+      pill.appendChild(dow);
+      pill.appendChild(num);
+      pill.addEventListener("click", function(){ goTo(new Date(day.date)); });
+      strip.appendChild(pill);
+      pillEls[day.key] = pill;
+    });
+  }
+  function updateStripPill(key){
+    var day = DAY_BY_KEY[key];
+    var pill = pillEls[key];
+    if (!pill || !day) return;
+    var comp = dayCompletion(day);
+    var isDone = comp && comp.done === comp.total;
+    pill.classList.toggle("is-done", !!isDone);
+  }
+  function renderStripSelection(){
+    var selKey = keyOf(selected);
+    ALL_DAYS.forEach(function(day){
+      var pill = pillEls[day.key];
+      if (!pill) return;
+      pill.classList.toggle("is-today", day.key === todayKey);
+      pill.classList.toggle("is-selected", day.key === selKey);
+      updateStripPill(day.key);
+    });
+    var selPill = pillEls[selKey];
+    if (selPill){
+      strip.scrollLeft = selPill.offsetLeft - (strip.clientWidth/2) + (selPill.clientWidth/2);
+    }
+  }
+
+  function rebuildAll(){
+    rebuildDays();
+    selected = clampDate(selected);
+    buildStrip();
+    renderDay();
+  }
+
+  function removeMedication(id, name){
+    if (!confirm('¿Eliminar "' + name + '" de todo el cronograma?')) return;
+    saveMeds(MEDS.filter(function(m){ return m.id !== id; }));
+    rebuildAll();
+  }
+
+  // ---- Add / edit modal ----
+  var modalOverlay = document.getElementById("modalOverlay");
+  var modalTitle = document.getElementById("modalTitle");
+  var medForm = document.getElementById("medForm");
+  var deleteMedBtn = document.getElementById("deleteMedBtn");
+  var oneDayCheckbox = document.getElementById("f-oneday");
+  var endField = document.getElementById("endField");
+  var colorSwatches = document.getElementById("colorSwatches");
+  var editingId = null;
+  var selectedColor = PRESET_COLORS[0];
+
+  function buildSwatches(){
+    colorSwatches.innerHTML = "";
+    PRESET_COLORS.forEach(function(c){
+      var sw = document.createElement("button");
+      sw.type = "button";
+      sw.className = "swatch" + (c === selectedColor ? " selected" : "");
+      sw.style.background = c;
+      sw.setAttribute("aria-label", "Color " + c);
+      sw.addEventListener("click", function(){
+        selectedColor = c;
+        Array.prototype.forEach.call(colorSwatches.children, function(el){ el.classList.remove("selected"); });
+        sw.classList.add("selected");
+      });
+      colorSwatches.appendChild(sw);
+    });
+  }
+
+  function toggleEndField(){
+    endField.style.display = oneDayCheckbox.checked ? "none" : "flex";
+    document.getElementById("f-end").required = !oneDayCheckbox.checked;
+  }
+  oneDayCheckbox.addEventListener("change", toggleEndField);
+
+  function openMedForm(med){
+    editingId = med ? med.id : null;
+    modalTitle.textContent = med ? "Editar medicamento" : "Nuevo medicamento";
+    document.getElementById("f-name").value = med ? med.name : "";
+    document.getElementById("f-subtitle").value = med ? med.subtitle : "";
+    document.getElementById("f-dose").value = med ? med.dose : "";
+    document.getElementById("f-time1").value = med ? med.times[0] : "";
+    document.getElementById("f-time2").value = (med && med.times[1]) ? med.times[1] : "";
+    document.getElementById("f-start").value = med ? med.start : keyOf(new Date());
+    var oneDay = med ? (med.start === med.end) : false;
+    oneDayCheckbox.checked = oneDay;
+    document.getElementById("f-end").value = med ? med.end : keyOf(new Date());
+    toggleEndField();
+    document.getElementById("f-question").checked = med ? !!med.question : false;
+    selectedColor = med ? med.color : PRESET_COLORS[0];
+    buildSwatches();
+    deleteMedBtn.classList.toggle("hidden", !med);
+    modalOverlay.classList.add("open");
+  }
+  function closeMedForm(){
+    modalOverlay.classList.remove("open");
+    editingId = null;
+  }
+
+  document.getElementById("addMedBtn").addEventListener("click", function(){ openMedForm(null); });
+  document.getElementById("modalClose").addEventListener("click", closeMedForm);
+  document.getElementById("cancelMedBtn").addEventListener("click", closeMedForm);
+  modalOverlay.addEventListener("click", function(e){ if (e.target === modalOverlay) closeMedForm(); });
+
+  deleteMedBtn.addEventListener("click", function(){
+    if (!editingId) return;
+    var med = findMed(editingId);
+    if (!med) return;
+    if (confirm('¿Eliminar "' + med.name + '" de todo el cronograma?')){
+      saveMeds(MEDS.filter(function(m){ return m.id !== editingId; }));
+      closeMedForm();
+      rebuildAll();
+    }
+  });
+
+  medForm.addEventListener("submit", function(e){
+    e.preventDefault();
+    var name = document.getElementById("f-name").value.trim();
+    var subtitle = document.getElementById("f-subtitle").value.trim();
+    var dose = document.getElementById("f-dose").value.trim();
+    var time1 = document.getElementById("f-time1").value;
+    var time2 = document.getElementById("f-time2").value;
+    var start = document.getElementById("f-start").value;
+    var oneDay = oneDayCheckbox.checked;
+    var end = oneDay ? start : document.getElementById("f-end").value;
+    var question = document.getElementById("f-question").checked;
+
+    if (!name || !dose || !time1 || !start || !end){
+      alert("Completá al menos nombre, dosis, horario y fecha de inicio.");
+      return;
+    }
+    if (end < start){
+      alert("La fecha de fin no puede ser anterior a la de inicio.");
+      return;
+    }
+    var times = (time2 && time2 !== time1) ? [time1, time2].sort() : [time1];
+
+    var id = editingId || ("med-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2,7));
+    var med = { id:id, name:name, subtitle:subtitle, dose:dose, times:times, start:start, end:end, color:selectedColor, question:question };
+
+    var next;
+    if (editingId){
+      next = MEDS.map(function(m){ return m.id === editingId ? med : m; });
+    } else {
+      next = MEDS.concat([med]);
+    }
+    saveMeds(next);
+    closeMedForm();
+    rebuildAll();
+  });
+
+  // ---- Init ----
+  MEDS = loadMeds();
+  rebuildDays();
+  selected = clampDate(new Date());
+  buildStrip();
+  renderDay();
+
+})();
+</script>
+</body>
+</html>
